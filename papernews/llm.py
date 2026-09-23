@@ -78,9 +78,18 @@ def _groq(system: str, user: str, max_tokens: int) -> str:
     _groq_throttle(estimated_tokens)
 
     client = groq.Groq()
+    # gpt-oss models reason silently before answering, and by default that
+    # reasoning eats into max_tokens without being streamed back — a tight
+    # budget (e.g. 300 for a summary) can be consumed entirely by hidden
+    # reasoning, leaving zero tokens for the actual answer. Our tasks are
+    # simple extraction/rewriting, not multi-step reasoning, so turn it off.
+    # Override via GROQ_REASONING_EFFORT if a future model needs it — and if
+    # a model rejects the param outright (400), drop it and retry once
+    # rather than failing the whole call.
+    reasoning_effort = os.environ.get("GROQ_REASONING_EFFORT", "none")
     for attempt in range(5):
         try:
-            stream = client.chat.completions.create(
+            kwargs = dict(
                 model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
                 max_tokens=max_tokens,
                 stream=True,
@@ -89,6 +98,9 @@ def _groq(system: str, user: str, max_tokens: int) -> str:
                     {"role": "user", "content": user},
                 ],
             )
+            if reasoning_effort:
+                kwargs["reasoning_effort"] = reasoning_effort
+            stream = client.chat.completions.create(**kwargs)
             parts: list[str] = []
             for chunk in stream:
                 delta = chunk.choices[0].delta.content
@@ -101,6 +113,10 @@ def _groq(system: str, user: str, max_tokens: int) -> str:
             retry_after = e.response.headers.get("retry-after")
             wait = float(retry_after) if retry_after else 2 ** attempt * 10
             time.sleep(wait)
+        except groq.BadRequestError:
+            if not reasoning_effort:
+                raise
+            reasoning_effort = None  # drop the param and retry
     raise AssertionError("unreachable")
 
 
