@@ -32,4 +32,7 @@ services:
       # Lets `OLLAMA_HOST=http://host.docker.internal:...` work on Linux.
       - "host.docker.internal:host-gateway"
     ports:
-      - "8000:8000"
+      # Host port only — override via PAPERNEWS_PORT in .env if 8000 is
+      # already taken on your host (the container always listens on 8000
+      # internally, that side never changes).
+      - "${PAPERNEWS_PORT:-8000}:8000"
