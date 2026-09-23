@@ -8,55 +8,125 @@
 # World news (Wikipedia Current events) is rendered inline on page 1 from
 # decorations — NOT configured here as a regular article source.
 
-# --- Math / Science ------------------------------------------------------
+# UK digest, curated for: no tabloid/celebrity content, no paywalled
+# feeds (trafilatura can only extract what's actually public), and a mix
+# of outlets rather than one newsroom's house view.
+#
+#   BBC      — public-service remit to impartiality; the closest thing to
+#              a "balanced" default UK source. Used for every topic below.
+#   Guardian — quality long-form/investigative journalism; editorially
+#              left-of-centre. Included for depth; drop it if you want a
+#              stricter centre line, or add a right-of-centre outlet
+#              alongside it (most — Telegraph, Times — are paywalled and
+#              won't extract cleanly here; see the README note on this).
+#   Sky News — mainstream commercial broadcaster, generally straight
+#              wire-style reporting, adds a third independent newsroom.
+#
+# Reuters is deliberately not here — they shut down public RSS in 2020.
+#
+# Limits below total ~50 articles/issue (README's suggested 30-60 sweet
+# spot). Raise/lower per source to taste.
+
+# --- Politics --------------------------------------------------------------
 
 [[source]]
-name = "Quanta Magazine"
+name = "BBC Politics"
 kind = "rss"
-url = "https://www.quantamagazine.org/feed/"
-limit = 8
+url = "https://feeds.bbci.co.uk/news/politics/rss.xml"
+limit = 6
 
 [[source]]
-name = "Terence Tao"
+name = "Guardian Politics"
 kind = "rss"
-url = "https://terrytao.wordpress.com/feed/"
+url = "https://www.theguardian.com/politics/rss"
+limit = 4
+
+[[source]]
+name = "Sky News Politics"
+kind = "rss"
+url = "https://feeds.skynews.com/feeds/rss/politics.xml"
+limit = 3
+
+# --- Business --------------------------------------------------------------
+
+[[source]]
+name = "BBC Business"
+kind = "rss"
+url = "https://feeds.bbci.co.uk/news/business/rss.xml"
 limit = 5
 
-# --- ML / AI -------------------------------------------------------------
+[[source]]
+name = "Guardian Business"
+kind = "rss"
+url = "https://www.theguardian.com/uk/business/rss"
+limit = 3
 
 [[source]]
-name = "Lil'Log"
+name = "Sky News Business"
 kind = "rss"
-url = "https://lilianweng.github.io/index.xml"
+url = "https://feeds.skynews.com/feeds/rss/business.xml"
+limit = 3
+
+# --- Sport -------------------------------------------------------------
+
+[[source]]
+name = "BBC Sport"
+kind = "rss"
+url = "https://feeds.bbci.co.uk/sport/rss.xml"
+limit = 6
+
+[[source]]
+name = "Guardian Sport"
+kind = "rss"
+url = "https://www.theguardian.com/uk/sport/rss"
+limit = 4
+
+# --- Technology --------------------------------------------------------
+
+[[source]]
+name = "BBC Technology"
+kind = "rss"
+url = "https://feeds.bbci.co.uk/news/technology/rss.xml"
 limit = 5
 
 [[source]]
-name = "The Gradient"
+name = "Guardian Technology"
 kind = "rss"
-url = "https://thegradient.pub/rss/"
+url = "https://www.theguardian.com/uk/technology/rss"
+limit = 3
+
+[[source]]
+name = "Sky News Technology"
+kind = "rss"
+url = "https://feeds.skynews.com/feeds/rss/technology.xml"
+limit = 3
+
+# --- UK general (catches stories outside the four topics above) ------------
+
+[[source]]
+name = "BBC UK News"
+kind = "rss"
+url = "https://feeds.bbci.co.uk/news/uk/rss.xml"
 limit = 5
+since_hours = 24
 
-# --- Apple ecosystem -----------------------------------------------------
-
-[[source]]
-name = "MacRumors"
-kind = "rss"
-url = "https://feeds.macrumors.com/MacRumors-All"
-limit = 15
-
-# --- Aggregator (last on purpose; mostly social, occasional gems) --------
-
-[[source]]
-name = "Hacker News"
-kind = "hn"
-limit = 10
-since_hours = 48
-min_points = 100
-
-# --- Disabled (uncomment to re-enable) -----------------------------------
+# --- Disabled (uncomment to re-enable) ------------------------------------
 
 # [[source]]
-# name = "heise"
+# name = "Hacker News"
+# kind = "hn"
+# limit = 10
+# since_hours = 48
+# min_points = 100
+
+# [[source]]
+# name = "Quanta Magazine"
 # kind = "rss"
-# url = "https://www.heise.de/rss/heise-atom.xml"
+# url = "https://www.quantamagazine.org/feed/"
+# limit = 8
+
+# [[source]]
+# name = "MacRumors"
+# kind = "rss"
+# url = "https://feeds.macrumors.com/MacRumors-All"
 # limit = 15
