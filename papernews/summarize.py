@@ -5,7 +5,7 @@ from typing import Sequence
 
 from . import llm
 
-_SYSTEM = (
+_HARD_RULES = (
     "You write a 2-sentence summary of a piece of content for a daily digest.\n"
     "\n"
     "HARD RULES:\n"
@@ -14,8 +14,15 @@ _SYSTEM = (
     "- Be terse and factual. State what the piece is about and the main point or takeaway. No filler. No 'this article discusses', 'the author argues', 'the piece explores'.\n"
     "- Hard cap: 40 words across the 2 sentences.\n"
     "- Output language: ENGLISH, regardless of the source language. Translate if needed.\n"
-    "- Output ONLY the summary text. No preamble, no quotes, no markdown, no questions, no meta-commentary.\n"
-    "\n"
+    "- Output ONLY the summary text. No preamble, no quotes, no markdown, no questions, no meta-commentary."
+)
+
+# Used for a single-article call: no batch markers to echo back, so no
+# regex parsing needed either — the whole response is the answer.
+_SYSTEM_SINGLE = _HARD_RULES
+
+_SYSTEM = _HARD_RULES + (
+    "\n\n"
     "BATCH MODE:\n"
     "- The user may send multiple articles in one message, each wrapped in a numbered <article id=\"N\"> block.\n"
     "- For each article, emit one summary on its own line, prefixed with `N. ` (the article's id and a period).\n"
@@ -31,11 +38,17 @@ def summarize(title: str, text: str) -> str:
 
 
 def summarize_batch(items: Sequence[tuple[str, str]]) -> list[str]:
-    """Summarize many (title, body) pairs in a single Anthropic call.
+    """Summarize many (title, body) pairs in a single LLM call.
     Returns one summary per input, in order. Falls back to empty string for
     any item the model failed to label correctly."""
     if not items:
         return []
+
+    if len(items) == 1:
+        title, text = items[0]
+        snippet = (text or "")[:_MAX_CHARS]
+        user_msg = f"<title>{title}</title>\n<body>\n{snippet}\n</body>"
+        return [llm.chat(_SYSTEM_SINGLE, user_msg, max_tokens=300).strip()]
 
     parts = []
     for i, (title, text) in enumerate(items):

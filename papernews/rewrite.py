@@ -5,7 +5,7 @@ from typing import Sequence
 
 from . import llm
 
-_SYSTEM = (
+_HARD_RULES = (
     "You are a copy editor preparing content for print in a daily digest.\n"
     "\n"
     "HARD RULES:\n"
@@ -36,8 +36,18 @@ _SYSTEM = (
     "FORMATTING TO AVOID:\n"
     "- No markdown headings (no #).\n"
     "- No markdown emphasis (no **bold**, no *italics*).\n"
-    "- No markdown links — write 'see example.com' instead of '[example](https://...)'.\n"
-    "\n"
+    "- No markdown links — write 'see example.com' instead of '[example](https://...)'."
+)
+
+# Used for a single-article call: no start/end markers to echo back, so no
+# regex parsing needed either — the whole response is the rewritten body.
+# This also sidesteps a failure mode with batch markers: if the model hits
+# max_tokens right before writing the closing marker, the regex never
+# matches and a mostly-good rewrite gets thrown away entirely.
+_SYSTEM_SINGLE = _HARD_RULES
+
+_SYSTEM = _HARD_RULES + (
+    "\n\n"
     "BATCH MODE:\n"
     "- The user may send multiple articles in one message. Each is wrapped between a `=== ARTICLE N START ===` marker (with the article's id) and a `=== ARTICLE N END ===` marker.\n"
     "- For each input article, output the rewritten body between the same start/end markers, in the same order, using the same id.\n"
@@ -53,11 +63,17 @@ def rewrite(title: str, text: str) -> str:
 
 
 def rewrite_batch(items: Sequence[tuple[str, str]]) -> list[str]:
-    """Rewrite many (title, body) pairs in a single Anthropic call.
+    """Rewrite many (title, body) pairs in a single LLM call.
     Returns one rewritten body per input, in order; empty string for any
     item the model failed to delimit correctly."""
     if not items:
         return []
+
+    if len(items) == 1:
+        title, text = items[0]
+        snippet = (text or "")[:_MAX_CHARS]
+        user_msg = f"Title: {title}\n\n{snippet}"
+        return [llm.chat(_SYSTEM_SINGLE, user_msg, max_tokens=4096).strip()]
 
     parts = []
     for i, (title, text) in enumerate(items):
