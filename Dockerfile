@@ -11,7 +11,6 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl \
         texlive-xetex texlive-fonts-recommended texlive-latex-extra \
-        texlive-lang-european \
         lmodern \
         poppler-utils \
         python3 python3-pip python3-venv \
