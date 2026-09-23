@@ -1,0 +1,30 @@
+[project]
+name = "papernews"
+version = "0.1.0"
+description = "Daily news aggregator → LaTeX PDF digest"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31",
+    "feedparser>=6.0",
+    "trafilatura>=1.12",
+    "jinja2>=3.1",
+    "flask>=3.0",
+    "apscheduler>=3.10",
+    "gunicorn>=21.2",
+    "anthropic>=0.40",
+    "groq>=0.11",
+    "httpx>=0.27",
+]
+
+# LLM backend is selected via LLM_BACKEND env var ("anthropic", "groq", or "ollama").
+
+
+[project.scripts]
+papernews = "papernews.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["papernews"]

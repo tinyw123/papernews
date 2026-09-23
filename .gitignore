@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+archive/
+state.db
+.build/
+*.aux
+*.log
+*.out
+*.toc
+.DS_Store
+data/
+.env

@@ -1,0 +1,62 @@
+# Add, remove, or reorder sources here.
+# kind = "hn"  -> Hacker News via Algolia search (top by points in a window)
+# kind = "rss" -> RSS/Atom feed via feedparser
+#
+# Order matters: sources appear in this order in the PDF contents and
+# article sequence. Quality first, social last.
+
+# World news (Wikipedia Current events) is rendered inline on page 1 from
+# decorations — NOT configured here as a regular article source.
+
+# --- Math / Science ------------------------------------------------------
+
+[[source]]
+name = "Quanta Magazine"
+kind = "rss"
+url = "https://www.quantamagazine.org/feed/"
+limit = 8
+
+[[source]]
+name = "Terence Tao"
+kind = "rss"
+url = "https://terrytao.wordpress.com/feed/"
+limit = 5
+
+# --- ML / AI -------------------------------------------------------------
+
+[[source]]
+name = "Lil'Log"
+kind = "rss"
+url = "https://lilianweng.github.io/index.xml"
+limit = 5
+
+[[source]]
+name = "The Gradient"
+kind = "rss"
+url = "https://thegradient.pub/rss/"
+limit = 5
+
+# --- Apple ecosystem -----------------------------------------------------
+
+[[source]]
+name = "MacRumors"
+kind = "rss"
+url = "https://feeds.macrumors.com/MacRumors-All"
+limit = 15
+
+# --- Aggregator (last on purpose; mostly social, occasional gems) --------
+
+[[source]]
+name = "Hacker News"
+kind = "hn"
+limit = 10
+since_hours = 48
+min_points = 100
+
+# --- Disabled (uncomment to re-enable) -----------------------------------
+
+# [[source]]
+# name = "heise"
+# kind = "rss"
+# url = "https://www.heise.de/rss/heise-atom.xml"
+# limit = 15
