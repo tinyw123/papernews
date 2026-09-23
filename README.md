@@ -149,29 +149,45 @@ for higher quality at ~10× the cost.
 
 ### Groq (free tier)
 
-Hosted inference, OpenAI-compatible API, no GPU needed. Groq's free tier is
-generous enough for a daily digest of a few dozen articles.
+Hosted inference, OpenAI-compatible API, no GPU needed. The free tier works
+for a daily digest, but its tokens-per-minute cap is small — 8000 TPM as of
+writing, and (unlike RPM limits) that's a hard per-request ceiling, not just
+a throughput average: a single request estimated over it is rejected
+outright with a 413, no retry helps. papernews' default batching (8 articles
+per LLM call, with the rewrite step alone requesting up to `4096 ×
+batch_size` output tokens) blows straight through that. You need:
 
 ```bash
 # .env
 LLM_BACKEND=groq
 GROQ_API_KEY=gsk_...                       # create at https://console.groq.com/keys
 GROQ_MODEL=openai/gpt-oss-120b             # default; see below
-PAPERNEWS_WORKERS=2                        # lower than the Anthropic default (8) —
-                                            # the free tier's requests-per-minute
-                                            # limit is easy to hit with 8 concurrent
-                                            # batched calls
+PAPERNEWS_WORKERS=1                        # serialize — concurrent requests share
+                                            # the same per-minute budget
+PAPERNEWS_BATCH_SIZE=1                     # 1 article per LLM call, not the default 8
 ```
+
+With `PAPERNEWS_BATCH_SIZE=1`, `papernews/llm.py`'s Groq backend also
+retries automatically (with backoff, honouring `Retry-After`) on a genuine
+429 rate-limit — the case where this minute's budget was already spent by
+other calls. A 413 ("request too large") is different: that single
+article's content is too long for the model's per-request ceiling no matter
+when you send it, so it isn't retried — it stays pending and is tried again
+on the next scheduled ingest (nothing is lost, articles aren't deleted once
+gathered, just delayed until they succeed).
 
 **On the model.** Groq deprecates and swaps out hosted models more often
 than Anthropic — `llama-3.3-70b-versatile`, an earlier default for many
-projects, was retired in August 2026. Check
+projects, was retired in August 2026 (`llama-3.1-8b-instant` left the free
+tier the same day). Check
 [console.groq.com/docs/models](https://console.groq.com/docs/models) (or
 `curl -s -H "Authorization: Bearer $GROQ_API_KEY"
 https://api.groq.com/openai/v1/models`) for what's currently live before
-relying on the default above. `qwen/qwen3.6-27b` is a smaller, faster
-alternative that leaves more free-tier rate-limit headroom if
-`openai/gpt-oss-120b` feels tight.
+relying on the default above. Note that as of writing every current
+free-tier chat model — `openai/gpt-oss-120b`, `openai/gpt-oss-20b`,
+`qwen/qwen3.6-27b`, `qwen/qwen3.8-27b` — shares the identical 8000 TPM/30
+RPM/200K TPD limits, so switching models won't buy you more headroom; the
+batch/worker settings above are what actually matter.
 
 ### Ollama (local)
 

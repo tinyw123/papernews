@@ -36,24 +36,40 @@ def _groq(system: str, user: str, max_tokens: int) -> str:
     # deprecates/replaces hosted models — override GROQ_MODEL if the
     # default below has since been retired (see
     # https://console.groq.com/docs/deprecations).
-    from groq import Groq
+    #
+    # The free tier's tokens-per-minute cap (8000 TPM as of writing, same
+    # across every current free chat model) is tiny — a single request that
+    # itself exceeds it gets rejected outright (keep PAPERNEWS_BATCH_SIZE=1
+    # and rely on retry here for the case where a burst of *other* calls
+    # already used up this minute's budget).
+    import groq
+    import time
 
-    client = Groq()
-    stream = client.chat.completions.create(
-        model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
-        max_tokens=max_tokens,
-        stream=True,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
-    parts: list[str] = []
-    for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            parts.append(delta)
-    return "".join(parts)
+    client = groq.Groq()
+    for attempt in range(5):
+        try:
+            stream = client.chat.completions.create(
+                model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+                max_tokens=max_tokens,
+                stream=True,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
+            parts: list[str] = []
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    parts.append(delta)
+            return "".join(parts)
+        except groq.RateLimitError as e:
+            if attempt == 4:
+                raise
+            retry_after = e.response.headers.get("retry-after")
+            wait = float(retry_after) if retry_after else 2 ** attempt * 10
+            time.sleep(wait)
+    raise AssertionError("unreachable")
 
 
 def _ollama(system: str, user: str, max_tokens: int) -> str:

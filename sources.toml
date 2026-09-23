@@ -19,12 +19,15 @@
 #              stricter centre line, or add a right-of-centre outlet
 #              alongside it (most — Telegraph, Times — are paywalled and
 #              won't extract cleanly here; see the README note on this).
-#   Sky News — mainstream commercial broadcaster, generally straight
-#              wire-style reporting, adds a third independent newsroom.
 #
 # Reuters is deliberately not here — they shut down public RSS in 2020.
+# Sky News was tried and dropped: the feeds parse fine but every article
+# page came back "no readable content" from trafilatura (0/9 extracted in
+# testing) — likely bot-blocking or a JS-rendered page with nothing in the
+# server-rendered HTML. Left commented out below in case Sky fixes this or
+# someone wants to debug it further.
 #
-# Limits below total ~50 articles/issue (README's suggested 30-60 sweet
+# Limits below total ~41 articles/issue (README's suggested 30-60 sweet
 # spot). Raise/lower per source to taste.
 
 # --- Politics --------------------------------------------------------------
@@ -41,12 +44,6 @@ kind = "rss"
 url = "https://www.theguardian.com/politics/rss"
 limit = 4
 
-[[source]]
-name = "Sky News Politics"
-kind = "rss"
-url = "https://feeds.skynews.com/feeds/rss/politics.xml"
-limit = 3
-
 # --- Business --------------------------------------------------------------
 
 [[source]]
@@ -59,12 +56,6 @@ limit = 5
 name = "Guardian Business"
 kind = "rss"
 url = "https://www.theguardian.com/uk/business/rss"
-limit = 3
-
-[[source]]
-name = "Sky News Business"
-kind = "rss"
-url = "https://feeds.skynews.com/feeds/rss/business.xml"
 limit = 3
 
 # --- Sport -------------------------------------------------------------
@@ -95,12 +86,6 @@ kind = "rss"
 url = "https://www.theguardian.com/uk/technology/rss"
 limit = 3
 
-[[source]]
-name = "Sky News Technology"
-kind = "rss"
-url = "https://feeds.skynews.com/feeds/rss/technology.xml"
-limit = 3
-
 # --- UK general (catches stories outside the four topics above) ------------
 
 [[source]]
@@ -111,6 +96,26 @@ limit = 5
 since_hours = 24
 
 # --- Disabled (uncomment to re-enable) ------------------------------------
+
+# Sky News — feeds parse fine but trafilatura got 0/9 readable articles in
+# testing. Try re-enabling if you want to see whether that's since changed.
+# [[source]]
+# name = "Sky News Politics"
+# kind = "rss"
+# url = "https://feeds.skynews.com/feeds/rss/politics.xml"
+# limit = 3
+
+# [[source]]
+# name = "Sky News Business"
+# kind = "rss"
+# url = "https://feeds.skynews.com/feeds/rss/business.xml"
+# limit = 3
+
+# [[source]]
+# name = "Sky News Technology"
+# kind = "rss"
+# url = "https://feeds.skynews.com/feeds/rss/technology.xml"
+# limit = 3
 
 # [[source]]
 # name = "Hacker News"

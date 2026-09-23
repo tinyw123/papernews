@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import tomllib
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -108,7 +109,7 @@ def cmd_gather(store: Store, sources: list[dict]) -> int:
     return 0
 
 
-_BATCH_SIZE = 8  # articles per LLM call
+_BATCH_SIZE = int(os.environ.get("PAPERNEWS_BATCH_SIZE", "8"))  # articles per LLM call
 
 
 def _chunks(seq: list, n: int) -> list[list]:
