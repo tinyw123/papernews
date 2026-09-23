@@ -50,7 +50,7 @@ RUN python3 -m venv /opt/venv \
  && /opt/venv/bin/pip install --no-cache-dir \
         requests feedparser trafilatura jinja2 \
         flask apscheduler gunicorn \
-        anthropic httpx
+        anthropic groq httpx
 
 COPY papernews ./papernews
 COPY sources.toml ./

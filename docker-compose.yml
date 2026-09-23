@@ -5,9 +5,11 @@ services:
     container_name: papernews
     restart: unless-stopped
     environment:
-      # LLM backend — "anthropic" (default) or "ollama" (bring your own Ollama instance)
+      # LLM backend — "anthropic" (default), "groq", or "ollama" (bring your own Ollama instance)
       - LLM_BACKEND=${LLM_BACKEND:-anthropic}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_MODEL=${GROQ_MODEL:-openai/gpt-oss-120b}
       # `host.docker.internal` reaches an Ollama running on the host. On
       # Docker Desktop (Mac/Windows) this resolves automatically; the
       # extra_hosts entry below is what makes it work on Linux too.
