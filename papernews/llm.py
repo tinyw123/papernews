@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+import time
 
 _BACKEND = os.environ.get("LLM_BACKEND", "anthropic").lower()
 
@@ -31,19 +33,49 @@ def _anthropic(system: str, user: str, max_tokens: int) -> str:
     return final.content[0].text
 
 
+# Groq free tier: 8000 tokens/minute as of writing, same across every
+# current free chat model. That's a *rolling* budget, not just a per-request
+# cap — several back-to-back calls that are each individually fine can still
+# add up past it within the same 60s window. Track our own usage and pause
+# before a request would push us over, rather than only reacting after the
+# API rejects us. GROQ_TPM_BUDGET defaults below the real limit to leave
+# margin for the token-count estimate being approximate.
+_GROQ_TPM_BUDGET = int(os.environ.get("GROQ_TPM_BUDGET", "6500"))
+_groq_lock = threading.Lock()
+_groq_usage: list[tuple[float, int]] = []  # [(monotonic_time, tokens), ...]
+
+
+def _groq_throttle(estimated_tokens: int) -> None:
+    while True:
+        with _groq_lock:
+            now = time.monotonic()
+            cutoff = now - 60
+            _groq_usage[:] = [(t, n) for t, n in _groq_usage if t > cutoff]
+            used = sum(n for _, n in _groq_usage)
+            # If the window's already empty, go ahead regardless of estimate
+            # size — otherwise a single request estimated above the whole
+            # budget would wait forever. (It may still 413/429; the retry
+            # loop in _groq handles that.)
+            if not _groq_usage or used + estimated_tokens <= _GROQ_TPM_BUDGET:
+                _groq_usage.append((now, estimated_tokens))
+                return
+            wait = _groq_usage[0][0] + 60 - now + 0.5
+        time.sleep(max(wait, 0.5))
+
+
 def _groq(system: str, user: str, max_tokens: int) -> str:
     # Free tier, OpenAI-compatible chat API. Model IDs churn as Groq
     # deprecates/replaces hosted models — override GROQ_MODEL if the
     # default below has since been retired (see
     # https://console.groq.com/docs/deprecations).
-    #
-    # The free tier's tokens-per-minute cap (8000 TPM as of writing, same
-    # across every current free chat model) is tiny — a single request that
-    # itself exceeds it gets rejected outright (keep PAPERNEWS_BATCH_SIZE=1
-    # and rely on retry here for the case where a burst of *other* calls
-    # already used up this minute's budget).
     import groq
-    import time
+
+    # Rough token estimate (~4 chars/token in English) to pace requests
+    # against the TPM budget before sending. Uses max_tokens as the output
+    # estimate since actual completion length isn't known upfront — an
+    # overestimate here just means we pace a bit more conservatively.
+    estimated_tokens = (len(system) + len(user)) // 4 + max_tokens
+    _groq_throttle(estimated_tokens)
 
     client = groq.Groq()
     for attempt in range(5):
